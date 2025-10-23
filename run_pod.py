@@ -163,6 +163,45 @@ def run_prediction(args):
                 df.to_csv(args.save_dir + "temsp_" + str(i) + ".csv",index=False, header=False) #save to file
             elif args.save_format == 'txt':
                 np.savetxt(args.save_dir + "temsp_" + str(i) + ".txt", temps[i].detach().cpu().numpy())
+
+def _smoke_test():
+    """
+    Minimal self-check to verify that FEniCS, Torch, and dependencies are working.
+    This runs a small Poisson solve on a unit square and prints versions + status.
+    """
+    import sys
+    import numpy as np
+    import dolfin
+    from dolfin import (
+        UnitSquareMesh, FunctionSpace, TrialFunction, TestFunction,
+        Constant, DirichletBC, Function, solve, grad, dot, dx
+    )
+
+    print("python:", sys.version.split()[0])
+    print("torch:", __import__("torch").__version__)
+    print("dolfin:", dolfin.__version__)
+    print("numpy:", np.__version__)
+
+    mesh = UnitSquareMesh(8, 8)
+    V = FunctionSpace(mesh, "P", 1)
+    u, v = TrialFunction(V), TestFunction(V)
+    a = dot(grad(u), grad(v)) * dx
+    L = Constant(1.0) * v * dx
+    u_sol = Function(V)
+    bc = DirichletBC(V, Constant(0.0), "on_boundary")
+    solve(a == L, u_sol, bc)
+
+    ok = u_sol.vector().norm("l2") > 0
+    print("fenics_ok:", ok)
+    return 0 if ok else 1
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
+
+     # --- smoke test path ---
+    if getattr(args, "smoke", False):
+        import sys
+        sys.exit(_smoke_test())
+        
     run_prediction(args)
