@@ -1,4 +1,5 @@
 import argparse
+import os
 
 def add_flags_from_config(parser, config_dict):
 
@@ -66,3 +67,19 @@ config_args = {
 parser = argparse.ArgumentParser()
 for _, config_dict in config_args.items():
     parser = add_flags_from_config(parser, config_dict)
+
+# 1) Quick environment/FEniCS check (used by: python run_pod.py --smoke)
+parser.add_argument(
+    "--smoke", action="store_true",
+    help="Run a quick environment/FEniCS check and exit (no data needed)."
+)
+
+# 2) Where your data will be mounted inside Docker (defaults to /data)
+parser.add_argument(
+    "--data-dir",
+    default=os.environ.get("DATA_PATH", "/data"),
+    help="Directory with input data (defaults to /data; override with DATA_PATH)."
+) 
+
+if not any(a.startswith("--save-dir") for a in os.sys.argv):
+    parser.set_defaults(**{"save-dir": os.environ.get("SAVE_DIR", "/data/results")})
