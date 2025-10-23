@@ -202,6 +202,6 @@ if __name__ == '__main__':
      # --- smoke test path ---
     if getattr(args, "smoke", False):
         import sys
-        sys.exit(_smoke_test())
+        sys.exit(_smoke_test()) 
         
     run_prediction(args)
